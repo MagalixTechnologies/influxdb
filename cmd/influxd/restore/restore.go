@@ -382,10 +382,12 @@ func (cmd *Command) uploadShardsLive() error {
 						cmd.StdoutLogger.Printf("Restoring shard %d live from backup %s\n", file.ShardID, file.FileName)
 						f, err := os.Open(filepath.Join(cmd.backupFilesPath, file.FileName))
 						if err != nil {
+							f.Close()
 							return err
 						}
 						gr, err := gzip.NewReader(f)
 						if err != nil {
+							f.Close()
 							return err
 						}
 						tr := tar.NewReader(gr)
@@ -395,6 +397,7 @@ func (cmd *Command) uploadShardsLive() error {
 						}
 
 						if err := cmd.client.UploadShard(file.ShardID, cmd.shardIDMap[file.ShardID], cmd.destinationDatabase, cmd.restoreRetention, tr); err != nil {
+							f.Close()
 							return err
 						}
 						f.Close()
@@ -429,6 +432,7 @@ func (cmd *Command) uploadShardsLive() error {
 			}
 			tr := tar.NewReader(f)
 			if err := cmd.client.UploadShard(shardID, cmd.shardIDMap[shardID], cmd.destinationDatabase, cmd.restoreRetention, tr); err != nil {
+				f.Close()
 				return err
 			}
 			f.Close()
@@ -499,7 +503,7 @@ func (cmd *Command) unpackTar(tarFile string) error {
 	// should get us ["db","rp", "00001", "00"]
 	pathParts := strings.Split(filepath.Base(tarFile), ".")
 	if len(pathParts) != 4 {
-		return fmt.Errorf("backup tarfile name incorrect length")
+		return fmt.Errorf("backup tarfile name incorrect format")
 	}
 
 	shardPath := filepath.Join(cmd.datadir, pathParts[0], pathParts[1], strings.Trim(pathParts[2], "0"))

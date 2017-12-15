@@ -33,8 +33,11 @@ func Stream(w io.Writer, dir, relativePath string, writeFunc func(f os.FileInfo,
 		}
 
 		// Figure out the the full relative path including any sub-dirs
-		subDir := strings.TrimPrefix(path, dir+string(filepath.Separator))
-		subDir = strings.TrimSuffix(subDir, f.Name())
+		subDir, _ := filepath.Split(path)
+		subDir, err = filepath.Rel(dir, subDir)
+		if err != nil {
+			return err
+		}
 
 		return writeFunc(f, filepath.Join(relativePath, subDir), path, tw)
 	})
@@ -58,7 +61,7 @@ func StreamFile(f os.FileInfo, shardRelativePath, fullPath string, tw *tar.Write
 	if err != nil {
 		return err
 	}
-	h.Name = filepath.Join(shardRelativePath, f.Name())
+	h.Name = filepath.ToSlash(filepath.Join(shardRelativePath, f.Name()))
 
 	if err := tw.WriteHeader(h); err != nil {
 		return err
@@ -105,7 +108,7 @@ func extractFile(tr *tar.Reader, dir string) error {
 
 	// The hdr.Name is the relative path of the file from the root data dir.
 	// e.g (db/rp/1/xxxxx.tsm or db/rp/1/index/xxxxxx.tsi)
-	sections := strings.Split(hdr.Name, string(filepath.Separator))
+	sections := strings.Split(filepath.FromSlash(hdr.Name), string(filepath.Separator))
 	if len(sections) < 3 {
 		return fmt.Errorf("invalid archive path: %s", hdr.Name)
 	}
