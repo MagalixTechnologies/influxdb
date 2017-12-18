@@ -140,6 +140,7 @@ func (c *client) Ping(timeout time.Duration) (time.Duration, string, error) {
 		return 0, "", err
 	}
 
+	req.Header.Set("Connection", "keep-alive")
 	req.Header.Set("User-Agent", c.useragent)
 
 	if c.username != "" {
@@ -386,6 +387,7 @@ func (c *client) Write(bp BatchPoints) error {
 		return err
 	}
 	req.Header.Set("Content-Type", "")
+	req.Header.Set("Connection", "keep-alive")
 	req.Header.Set("User-Agent", c.useragent)
 	if c.username != "" {
 		req.SetBasicAuth(c.username, c.password)
@@ -500,6 +502,7 @@ func (c *client) Query(q Query) (*Response, error) {
 	}
 
 	req.Header.Set("Content-Type", "")
+	req.Header.Set("Connection", "keep-alive")
 	req.Header.Set("User-Agent", c.useragent)
 
 	if c.username != "" {
