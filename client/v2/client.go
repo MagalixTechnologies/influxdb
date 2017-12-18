@@ -44,6 +44,17 @@ type HTTPConfig struct {
 	// TLSConfig allows the user to set their own TLS config for the HTTP
 	// Client. If set, this option overrides InsecureSkipVerify.
 	TLSConfig *tls.Config
+
+	// MaxIdleConnsPerHost, if non-zero, controls the maximum idle
+	// (keep-alive) connections to keep per-host. If zero,
+	// DefaultMaxIdleConnsPerHost is used.
+	MaxIdleConnsPerHost int
+
+	// IdleConnTimeout is the maximum amount of time an idle
+	// (keep-alive) connection will remain idle before closing
+	// itself.
+	// Zero means no limit.
+	IdleConnTimeout time.Duration
 }
 
 // BatchPointsConfig is the config data needed to create an instance of the BatchPoints struct.
@@ -98,6 +109,8 @@ func NewHTTPClient(conf HTTPConfig) (Client, error) {
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: conf.InsecureSkipVerify,
 		},
+		MaxIdleConnsPerHost: conf.MaxIdleConnsPerHost,
+		IdleConnTimeout:     conf.IdleConnTimeout,
 	}
 	if conf.TLSConfig != nil {
 		tr.TLSClientConfig = conf.TLSConfig
